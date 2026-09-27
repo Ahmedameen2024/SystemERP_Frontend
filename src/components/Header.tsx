@@ -1,0 +1,133 @@
+import { useLocation } from 'react-router-dom';
+import { useAuthStore } from '../store/authStore';
+
+const pageTitles: Record<string, string> = {
+  '/accounting': 'الدورة المحاسبية',
+  '/accounting/chart-of-accounts': 'دليل الحسابات',
+  '/accounting/journal-entries': 'القيود اليومية العامة',
+  '/accounting/trial-balance': 'ميزان المراجعة',
+  '/accounting/account-details': 'كشف الحساب',
+  '/accounting/financial-statements': 'القوائم المالية',
+  '/sales': 'لوحة المبيعات',
+  '/sales/customers': 'دليل العملاء',
+  '/sales/quotations': 'عروض الأسعار',
+  '/sales/invoices': 'فواتير المبيعات',
+  '/sales/returns': 'مرتجع المبيعات',
+  '/purchasing': 'لوحة قيادة المشتريات',
+  '/purchasing/requests': 'طلبات الشراء',
+  '/purchasing/orders': 'أوامر الشراء',
+  '/purchasing/receipts': 'استلام بضاعة المشتريات',
+  '/purchasing/invoices': 'فواتير المشتريات',
+  '/purchasing/returns': 'مردودات المشتريات',
+  '/purchasing/suppliers': 'دليل الموردين',
+  '/purchasing/supplier-groups': 'مجموعات الموردين',
+  '/purchasing/supplier-types': 'أنواع الموردين',
+  '/purchasing/payment-terms': 'شروط الدفع',
+  '/purchasing/reports': 'تقارير المشتريات والموردين',
+  '/inventory/items': 'الأصناف والمنتجات',
+  '/inventory/warehouses': 'إدارة المخازن',
+  '/inventory/uoms': 'وحدات القياس',
+  '/vouchers/receipt': 'سند القبض',
+  '/vouchers/payment': 'سند الصرف',
+  '/hr': 'لوحة الموارد البشرية',
+  '/hr/employees': 'بيانات الموظفين',
+  '/hr/attendance': 'سجل الحضور والانصراف',
+  '/hr/attendance-report': 'تقرير الحضور الشهري',
+  '/hr/leave': 'إدارة الإجازات',
+  '/payroll/sheet': 'كشف الرواتب الشهري',
+  '/payroll/allowances': 'البدلات والاستقطاعات',
+  '/system': 'إعدادات النظام',
+  '/system/branches': 'إدارة الفروع',
+  '/system/currencies': 'العملات وأسعار الصرف',
+  '/system/users': 'المستخدمون والصلاحيات',
+  '/reports': 'لوحة التقارير',
+};
+
+interface HeaderProps {
+  onToggleMobileSidebar?: () => void;
+}
+
+export default function Header({ onToggleMobileSidebar }: HeaderProps) {
+  const location = useLocation();
+  const { user } = useAuthStore();
+  const pageTitle = pageTitles[location.pathname] || 'نظام ERP';
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('ar-SA', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  });
+
+  return (
+    <header className="app-header">
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 1.5rem',
+        gap: '0.75rem',
+      }}>
+        {/* Company Name & Mobile Toggle (Right side - RTL) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-primary)' }}>
+          <button
+            className="mobile-menu-toggle"
+            onClick={onToggleMobileSidebar}
+            title="فتح القائمة"
+            aria-label="فتح القائمة"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 24 }}>menu</span>
+          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>corporate_fare</span>
+            <span className="header-company-name" style={{ fontWeight: 600, fontSize: '0.9375rem', whiteSpace: 'nowrap' }}>
+              {user?.companyNameAr || 'مؤسسة الأعمال الحديثة'}
+            </span>
+          </div>
+        </div>
+
+        {/* Page Title (Center) */}
+        <div className="header-page-title" style={{
+          fontWeight: 700,
+          fontSize: '1.0625rem',
+          color: 'var(--color-on-surface)',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}>
+          {pageTitle}
+        </div>
+
+        {/* Right controls (Left side in RTL) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div className="header-date-badge" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--color-on-surface-variant)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              تاريخ اليوم
+            </span>
+            <span style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>
+              {dateStr}
+            </span>
+          </div>
+          <button
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--color-on-surface-variant)',
+              transition: 'background 0.15s',
+              flexShrink: 0,
+            }}
+            title="الإشعارات"
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-surface-container-high)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: 20 }}>notifications</span>
+          </button>
+        </div>
+      </div>
+      {/* Primary accent line */}
+      <div style={{ height: 3, background: 'var(--color-primary)' }} />
+    </header>
+  );
+}

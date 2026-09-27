@@ -1,0 +1,15 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /accounting/
+Disallow: /sales/
+Disallow: /purchasing/
+Disallow: /inventory/
+Disallow: /vouchers/
+Disallow: /hr/
+Disallow: /payroll/
+Disallow: /system/
+Disallow: /reports/
+
+Sitemap: https://system-erp-silk.vercel.app/sitemap.xml
