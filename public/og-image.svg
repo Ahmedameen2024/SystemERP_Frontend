@@ -30,6 +30,6 @@
   <text x="900" y="445" text-anchor="end" font-family="system-ui, -apple-system, 'IBM Plex Sans Arabic', sans-serif" font-size="22" fill="#d1fae5">✓ إدارة الموارد البشرية ومسيرات الرواتب المتوافقة</text>
 
   <!-- URL Tag -->
-  <rect x="180" y="455" width="280" height="42" rx="12" fill="#000000" opacity="0.35" />
-  <text x="320" y="482" text-anchor="middle" font-family="monospace" font-size="16" font-weight="bold" fill="#8cf3f3">system-erp-silk.vercel.app</text>
+  <rect x="160" y="455" width="320" height="42" rx="12" fill="#000000" opacity="0.35" />
+  <text x="320" y="482" text-anchor="middle" font-family="monospace" font-size="16" font-weight="bold" fill="#8cf3f3">system-erp-frontend.vercel.app</text>
 </svg>

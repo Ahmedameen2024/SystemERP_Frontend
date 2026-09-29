@@ -12,4 +12,4 @@ Disallow: /payroll/
 Disallow: /system/
 Disallow: /reports/
 
-Sitemap: https://system-erp-silk.vercel.app/sitemap.xml
+Sitemap: https://system-erp-frontend.vercel.app/sitemap.xml
