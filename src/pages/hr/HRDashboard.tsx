@@ -1,4 +1,7 @@
-const KPICard = ({ label, value, icon, color, sub }: { label: string; value: string; icon: string; color: string; sub?: string }) => (
+import { useState, useEffect } from 'react';
+import api from '../../api/client';
+
+const KPICard = ({ label, value, icon, color, sub }: { label: string; value: string | number; icon: string; color: string; sub?: string }) => (
   <div className="kpi-card fade-in" style={{ borderTop: `3px solid ${color}` }}>
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
       <span className="kpi-label">{label}</span>
@@ -16,16 +19,31 @@ const KPICard = ({ label, value, icon, color, sub }: { label: string; value: str
 );
 
 export default function HRDashboard() {
-  const activeLeaves = [
-    { name: 'رانيا الحربي', type: 'إجازة سنوية', duration: '١٥ يوم', status: 'Approved', range: '٠٧/١٥ - ٠٧/٣٠' },
-    { name: 'سعد القحطاني', type: 'مأمورية عمل', duration: '٣ أيام', status: 'Approved', range: '٠٧/١٨ - ٠٧/٢٠' }
-  ];
+  const [stats, setStats] = useState<any>({
+    totalEmployees: 0,
+    activeEmployees: 0,
+    onLeaveToday: 0,
+    attendanceRate: '0%',
+    activeLeaves: [],
+    recentLogs: [],
+  });
+  const [loading, setLoading] = useState(true);
 
-  const recentLogs = [
-    { name: 'فهد المطيري', time: '٠٨:٢٥ ص', type: 'حضور (متأخر)', date: 'اليوم' },
-    { name: 'سعد القحطاني', time: '٠٨:٠٢ ص', type: 'حضور', date: 'اليوم' },
-    { name: 'خالد الغامدي', time: '١٦:٠٢ م', type: 'انصراف', date: 'أمس' }
-  ];
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/hr/dashboard');
+      setStats(res.data?.data || {});
+    } catch (err) {
+      console.error('Failed to load HR dashboard:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -35,10 +53,14 @@ export default function HRDashboard() {
             لوحة الموارد البشرية
           </h1>
           <p style={{ fontSize: '0.875rem', color: 'var(--color-on-surface-variant)', margin: '0.25rem 0 0' }}>
-            مراقبة الموظفين، الحضور والانصراف، وطلبات الإجازات النشطة
+            مراقبة الموظفين، الحضور والانصراف، وطلبات الإجازات النشطة من قاعدة البيانات
           </p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn btn-secondary btn-sm" onClick={fetchStats} disabled={loading}>
+            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>refresh</span>
+            تحديث
+          </button>
           <a href="/hr/employees" className="btn btn-primary btn-sm">
             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>add</span>
             تسجيل موظف جديد
@@ -47,10 +69,34 @@ export default function HRDashboard() {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem' }}>
-        <KPICard label="إجمالي الموظفين" value="١٥ موظف" icon="people" color="var(--color-primary)" sub="١٢ على رأس العمل" />
-        <KPICard label="في إجازة اليوم" value="٢ موظفين" icon="event_busy" color="#d97706" sub="إجازات معتمدة نشطة" />
-        <KPICard label="نسبة الانضباط هذا الشهر" value="٩٤٫٥%" icon="check_circle" color="#059669" sub="متوسط حضور الموظفين" />
-        <KPICard label="ساعات الإضافي الكلية" value="٣٢ ساعة" icon="more_time" color="var(--color-secondary)" sub="لشهر يونيو المنصرم" />
+        <KPICard 
+          label="إجمالي الموظفين" 
+          value={`${stats.totalEmployees || 0} موظف`} 
+          icon="people" 
+          color="var(--color-primary)" 
+          sub={`${stats.activeEmployees || 0} على رأس العمل`} 
+        />
+        <KPICard 
+          label="في إجازة اليوم" 
+          value={`${stats.onLeaveToday || 0} موظف`} 
+          icon="event_busy" 
+          color="#d97706" 
+          sub="إجازات معتمدة سارية" 
+        />
+        <KPICard 
+          label="نسبة الانضباط والحضور" 
+          value={stats.attendanceRate || '100%'} 
+          icon="check_circle" 
+          color="#059669" 
+          sub="معدل الحضور المقدر" 
+        />
+        <KPICard 
+          label="الطلبات المسجلة" 
+          value={`${stats.activeLeaves?.length || 0} طلب`} 
+          icon="pending_actions" 
+          color="var(--color-secondary)" 
+          sub="إجازات معتمدة حديثة" 
+        />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
@@ -58,49 +104,53 @@ export default function HRDashboard() {
         <div className="card" style={{ padding: '1.25rem' }}>
           <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span className="material-symbols-outlined" style={{ color: 'var(--color-primary)' }}>event_available</span>
-            الإجازات الجارية والمستقبلية المعتمَدة
+            الإجازات الجارية والمعتمدة
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {activeLeaves.map((item, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: idx < activeLeaves.length - 1 ? '1px solid var(--color-surface-container)' : 'none' }}>
-                <div>
-                  <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-on-surface)' }}>{item.name}</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--color-on-surface-variant)', marginTop: '0.125rem' }}>
-                    نوع الإجازة: {item.type} | المدة: {item.duration}
-                  </div>
-                </div>
-                <div style={{ textAlign: 'left' }}>
-                  <span className="chip chip-success" style={{ fontSize: '0.65rem' }}>مرحل للمسيرات</span>
-                  <div className="numeric" style={{ fontSize: '0.75rem', color: 'var(--color-on-surface-variant)', marginTop: '0.25rem' }}>{item.range}</div>
-                </div>
+            {(!stats.activeLeaves || stats.activeLeaves.length === 0) ? (
+              <div style={{ color: 'var(--color-on-surface-variant)', fontSize: '0.8125rem', textAlign: 'center', padding: '1.5rem 0' }}>
+                لا توجد إجازات سارية حالياً
               </div>
-            ))}
+            ) : (
+              stats.activeLeaves.map((item: any, idx: number) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: idx < stats.activeLeaves.length - 1 ? '1px solid var(--color-surface-container)' : 'none' }}>
+                  <div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-on-surface)' }}>{item.employee_name}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-on-surface-variant)', marginTop: '0.125rem' }}>
+                      النوع: {item.leave_type_name || 'سنوية'} | المدة: {item.total_days} يوم
+                    </div>
+                  </div>
+                  <span className="chip chip-success">معتمد</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Biometric logs feed */}
+        {/* Recent Attendance Logs */}
         <div className="card" style={{ padding: '1.25rem' }}>
           <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: '0 0 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="material-symbols-outlined" style={{ color: 'var(--color-primary)' }}>fingerprint</span>
-            سجل بصمات الحضور الفوري
+            <span className="material-symbols-outlined" style={{ color: '#059669' }}>schedule</span>
+            آخر تسجيلات الحضور المسجلة
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {recentLogs.map((log, idx) => (
-              <div key={idx} style={{ display: 'flex', justifyItems: 'center', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: idx < recentLogs.length - 1 ? '1px solid var(--color-surface-container)' : 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span className="material-symbols-outlined" style={{ color: 'var(--color-outline)', fontSize: 16 }}>schedule</span>
-                  <div>
-                    <span style={{ fontSize: '0.8125rem', fontWeight: 600 }}>{log.name}</span>
-                    <span className="numeric" style={{ fontSize: '0.75rem', color: 'var(--color-outline)', marginRight: '0.5rem' }}>{log.time}</span>
-                  </div>
-                </div>
-                <div>
-                  <span className={`chip ${log.type.includes('متأخر') ? 'chip-warning' : log.type.includes('انصراف') ? 'chip-neutral' : 'chip-success'}`} style={{ fontSize: '0.65rem' }}>
-                    {log.type}
-                  </span>
-                </div>
+            {(!stats.recentLogs || stats.recentLogs.length === 0) ? (
+              <div style={{ color: 'var(--color-on-surface-variant)', fontSize: '0.8125rem', textAlign: 'center', padding: '1.5rem 0' }}>
+                لا توجد سجلات حضور مدخلة اليوم
               </div>
-            ))}
+            ) : (
+              stats.recentLogs.map((item: any, idx: number) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '0.75rem', borderBottom: idx < stats.recentLogs.length - 1 ? '1px solid var(--color-surface-container)' : 'none' }}>
+                  <div>
+                    <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-on-surface)' }}>{item.employee_name}</div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--color-on-surface-variant)', marginTop: '0.125rem' }}>
+                      وقت الحضور: {item.check_in || '—'} | تاريخ: {item.attendance_date ? new Date(item.attendance_date).toLocaleDateString('ar-SA') : '—'}
+                    </div>
+                  </div>
+                  <span className="chip chip-neutral">{item.status || 'حاضر'}</span>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
